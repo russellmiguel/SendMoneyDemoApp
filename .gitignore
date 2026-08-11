@@ -1,15 +1,32 @@
-*.iml
-.gradle
-/local.properties
-/.idea/caches
-/.idea/libraries
-/.idea/modules.xml
-/.idea/workspace.xml
-/.idea/navEditor.xml
-/.idea/assetWizardSettings.xml
-.DS_Store
+# Built artifacts
 /build
-/captures
-.externalNativeBuild
-.cxx
+/app/build
+.gradle/
+
+# IDE settings
+.idea/
+*.iml
+*.iws
+.idea/caches
+.idea/libraries
+.idea/modules.xml
+.idea/workspace.xml
+.idea/navEditor.xml
+.idea/assetWizardSettings.xml
+
+# Local configuration files
 local.properties
+secrets.properties
+
+# Sensitive files / Signing
+*.jks
+*.keystore
+google-services.json
+
+# System files
+.DS_Store
+captures/
+
+# Native build
+.externalNativeBuild/
+.cxx/
