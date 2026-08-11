@@ -10,5 +10,5 @@ data class TransactionEntity(
     val amount: Double,
     val recipient: String,
     val date: Long,
-    val type: String // "SEND" or "RECEIVE"
+    val type: String // "SEND" or "DEPOSIT"
 )

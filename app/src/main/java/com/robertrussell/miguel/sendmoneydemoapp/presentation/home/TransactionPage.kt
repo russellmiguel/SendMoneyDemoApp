@@ -75,7 +75,7 @@ fun TransactionItem(transaction: Transaction) {
         }
 
         Text(
-            text = "${if (transaction.type == "SEND") "-" else "+"} $${String.format("%.2f", transaction.amount)}",
+            text = "${if (transaction.type == "SEND") "-" else "+"} ₱ ${String.format("%.2f", transaction.amount)}",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = if (transaction.type == "SEND") Color.Red else Color(0xFF4CAF50)

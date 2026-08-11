@@ -5,6 +5,8 @@ import com.robertrussell.miguel.sendmoneydemoapp.data.local.UserEntity
 import com.robertrussell.miguel.sendmoneydemoapp.domain.model.User
 import com.robertrussell.miguel.sendmoneydemoapp.domain.repository.AuthRepository
 import com.robertrussell.miguel.sendmoneydemoapp.domain.security.PasswordHasher
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -18,7 +20,8 @@ class AuthRepositoryImpl @Inject constructor(
             val user = UserEntity(
                 email = email,
                 name = name,
-                passwordHash = passwordHash
+                passwordHash = passwordHash,
+                balance = 0.0
             )
             userDao.insertUser(user)
             Result.success(Unit)
@@ -42,5 +45,9 @@ class AuthRepositoryImpl @Inject constructor(
         } catch (e: Exception) {
             Result.failure(e)
         }
+    }
+
+    override fun observeBalance(email: String): Flow<Double> {
+        return userDao.observeUserBalance(email).map { it ?: 0.0 }
     }
 }

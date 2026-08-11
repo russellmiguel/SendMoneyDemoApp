@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -17,6 +19,20 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val properties = Properties()
+        val propertiesFile = project.rootProject.file("local.properties")
+        if (propertiesFile.exists()) {
+            val stream = propertiesFile.inputStream()
+            properties.load(stream)
+            stream.close()
+        }
+
+        val sslPin = properties.getProperty("SSL_PIN") ?: ""
+        val sslPinBackUp = properties.getProperty("SSL_PIN_BACKUP") ?: ""
+
+        buildConfigField("String", "SSL_PIN", "\"$sslPin\"")
+        buildConfigField("String", "SSL_PIN_BACKUP", "\"$sslPinBackUp\"")
     }
 
     buildTypes {
@@ -35,6 +51,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -64,6 +81,10 @@ dependencies {
 
     // Crypto
     implementation(libs.bcrypt)
+
+    // Retrofit
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.gson)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

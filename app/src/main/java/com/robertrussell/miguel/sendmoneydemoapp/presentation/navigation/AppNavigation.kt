@@ -25,7 +25,7 @@ fun AppNavigation(modifier: Modifier = Modifier) {
 
     NavHost(
         navController = navController,
-        startDestination = Screen.SignUp.route,
+        startDestination = Screen.Login.route,
         modifier = modifier
     ) {
         composable(Screen.SignUp.route) {
@@ -41,7 +41,12 @@ fun AppNavigation(modifier: Modifier = Modifier) {
                     navController.navigate(Screen.SignUp.route)
                 },
                 onNavigateToHome = { user ->
-                    navController.navigate(Screen.Home.createRoute(user.name, user.email)) {
+                    navController.navigate(
+                        Screen.Home.createRoute(
+                            user.name,
+                            user.email
+                        )
+                    ) {
                         popUpTo(Screen.Login.route) { inclusive = true }
                     }
                 }

@@ -9,6 +9,7 @@ import androidx.lifecycle.viewModelScope
 import com.robertrussell.miguel.sendmoneydemoapp.domain.model.Transaction
 import com.robertrussell.miguel.sendmoneydemoapp.domain.usecase.GetTransactionsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -17,28 +18,22 @@ class HomeViewModel @Inject constructor(
     private val getTransactionsUseCase: GetTransactionsUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
-
     val userName: String = savedStateHandle.get<String>("userName") ?: "User"
     val userEmail: String = savedStateHandle.get<String>("userEmail") ?: ""
-
-    var balanceVisible by mutableStateOf(false)
-        private set
 
     var transactions by mutableStateOf<List<Transaction>>(emptyList())
         private set
 
     init {
-        loadTransactions()
+        loadData()
     }
 
-    fun toggleBalanceVisibility() {
-        balanceVisible = !balanceVisible
-    }
-
-    fun loadTransactions() {
+    fun loadData() {
         if (userEmail.isNotEmpty()) {
             viewModelScope.launch {
-                transactions = getTransactionsUseCase(userEmail)
+                getTransactionsUseCase(userEmail).collectLatest {
+                    transactions = it
+                }
             }
         }
     }
