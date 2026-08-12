@@ -1,5 +1,6 @@
 package com.robertrussell.miguel.sendmoneydemoapp.data.repository
 
+import android.util.Log
 import com.robertrussell.miguel.sendmoneydemoapp.data.local.TransactionDao
 import com.robertrussell.miguel.sendmoneydemoapp.data.local.TransactionEntity
 import com.robertrussell.miguel.sendmoneydemoapp.data.local.UserDao
@@ -27,6 +28,29 @@ class TransactionRepositoryImpl @Inject constructor(
                     type = it.type
                 )
             }
+        }
+    }
+
+    override suspend fun getRemoteTransactions(): Result<List<Transaction>> {
+        return try {
+            val response = api.getRemoteTransactions()
+            if (response.isSuccessful) {
+                val remoteTransactions = response.body() ?: emptyList()
+                val transactions = remoteTransactions.map {
+                    Transaction(
+                        id = it.id,
+                        amount = it.amount,
+                        recipient = it.recipient,
+                        date = it.date,
+                        type = it.type
+                    )
+                }
+                Result.success(transactions)
+            } else {
+                Result.failure(Exception("API Error: ${response.code()}"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
         }
     }
 

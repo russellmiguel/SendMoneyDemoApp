@@ -43,6 +43,8 @@ class SendMoneyViewModel @Inject constructor(
     }
 
     fun onNumberClick(number: String) {
+        if (amountText.length >= 10) return
+
         if (amountText == "0" && number != ".") {
             amountText = number
         } else {

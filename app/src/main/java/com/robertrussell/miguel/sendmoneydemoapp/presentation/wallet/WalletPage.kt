@@ -22,8 +22,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.DialogProperties
 import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
-import java.text.DecimalFormat
+import com.robertrussell.miguel.sendmoneydemoapp.util.formatNumber
+import com.robertrussell.miguel.sendmoneydemoapp.util.maskNumbers
 
 @Composable
 fun WalletPage(
@@ -43,28 +45,37 @@ fun WalletPage(
 
         AlertDialog(
             onDismissRequest = { showAddFundsDialog = false },
+            properties = DialogProperties(dismissOnClickOutside = false),
             title = { Text(text = "Add Funds") },
             text = {
                 Column {
                     OutlinedTextField(
                         value = amountText,
                         onValueChange = {
-                            if (it.isEmpty() || it.toDoubleOrNull() != null || it == ".") {
+                            if (it.length <= 10 && (it.isEmpty() || it.toDoubleOrNull() != null || it == ".")) {
                                 amountText = it
                             }
                         },
                         label = { Text("Amount") },
+                        singleLine = true,
+                        maxLines = 1,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
                         modifier = Modifier.fillMaxWidth()
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     OutlinedTextField(
                         value = password,
-                        onValueChange = { password = it },
+                        onValueChange = {
+                            if (it.length <= 20) {
+                                password = it
+                            }
+                        },
                         label = { Text("Enter Password") },
                         visualTransformation = PasswordVisualTransformation(),
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        maxLines = 1
                     )
                 }
             },
@@ -180,15 +191,6 @@ fun WalletPage(
             }
         }
     }
-}
-
-fun formatNumber(value: Number): String {
-    val formatter = DecimalFormat("#,##0.################")
-    return formatter.format(value)
-}
-
-fun String.maskNumbers(): String {
-    return this.replace(Regex("\\d"), "*")
 }
 
 @Composable

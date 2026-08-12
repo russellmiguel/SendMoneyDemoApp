@@ -1,4 +1,4 @@
-package com.robertrussell.miguel.sendmoneydemoapp.presentation.home
+package com.robertrussell.miguel.sendmoneydemoapp.presentation.transaction
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.*
@@ -12,14 +12,16 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.lifecycle.viewmodel.compose.hiltViewModel
 import com.robertrussell.miguel.sendmoneydemoapp.domain.model.Transaction
+import com.robertrussell.miguel.sendmoneydemoapp.util.formatNumber
 import java.text.SimpleDateFormat
 import java.util.*
 
 @Composable
 fun TransactionPage(
-    transactions: List<Transaction>,
-    onBackPressed: () -> Unit
+    onBackPressed: () -> Unit,
+    viewModel: TransactionViewModel = hiltViewModel()
 ) {
     BackHandler(onBack = onBackPressed)
     Column(
@@ -33,16 +35,24 @@ fun TransactionPage(
             fontWeight = FontWeight.Bold,
             modifier = Modifier.padding(bottom = 16.dp)
         )
-
-        if (transactions.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(text = "No transactions found", color = Color.Gray)
+        
+        when {
+            viewModel.isProcessing -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator(color = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
+                }
             }
-        } else {
-            LazyColumn {
-                items(transactions) { transaction ->
-                    TransactionItem(transaction)
-                    HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
+            viewModel.transactions.isEmpty() -> {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    Text(text = "No transactions found", color = Color.Gray)
+                }
+            }
+            else -> {
+                LazyColumn(modifier = Modifier.fillMaxSize()) {
+                    items(viewModel.transactions) { transaction ->
+                        TransactionItem(transaction)
+                        HorizontalDivider(color = Color.LightGray, thickness = 0.5.dp)
+                    }
                 }
             }
         }
@@ -75,7 +85,7 @@ fun TransactionItem(transaction: Transaction) {
         }
 
         Text(
-            text = "${if (transaction.type == "SEND") "-" else "+"} ₱ ${String.format("%.2f", transaction.amount)}",
+            text = "${if (transaction.type == "SEND") "-" else "+"} ₱ ${formatNumber(transaction.amount)}",
             fontSize = 18.sp,
             fontWeight = FontWeight.Bold,
             color = if (transaction.type == "SEND") Color.Red else Color(0xFF4CAF50)

@@ -1,6 +1,8 @@
 package com.robertrussell.miguel.sendmoneydemoapp.presentation.login
 
+import android.app.Activity
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -50,6 +52,10 @@ fun LoginScreen(
     val lightGray = Color(0xFFE8E8E8)
     val borderGray = Color(0xFFD0D0D0)
     val helpRed = Color(0xFFD32F2F)
+
+    BackHandler {
+        (context as? Activity)?.finish()
+    }
 
     Column(
         modifier = modifier

@@ -1,5 +1,6 @@
 package com.robertrussell.miguel.sendmoneydemoapp.presentation.wallet
 
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -64,6 +65,7 @@ class WalletViewModel @Inject constructor(
 
                 // Execute Add balance
                 val result = addBalanceUseCase(userEmail, amount)
+                Log.e("WalletViewModel", "addFunds: $result")
                 onResult(result)
             } finally {
                 isProcessing = false

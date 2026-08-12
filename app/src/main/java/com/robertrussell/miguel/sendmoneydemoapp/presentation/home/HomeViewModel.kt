@@ -15,26 +15,7 @@ import javax.inject.Inject
 
 @HiltViewModel
 class HomeViewModel @Inject constructor(
-    private val getTransactionsUseCase: GetTransactionsUseCase,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
     val userName: String = savedStateHandle.get<String>("userName") ?: "User"
-    val userEmail: String = savedStateHandle.get<String>("userEmail") ?: ""
-
-    var transactions by mutableStateOf<List<Transaction>>(emptyList())
-        private set
-
-    init {
-        loadData()
-    }
-
-    fun loadData() {
-        if (userEmail.isNotEmpty()) {
-            viewModelScope.launch {
-                getTransactionsUseCase(userEmail).collectLatest {
-                    transactions = it
-                }
-            }
-        }
-    }
 }

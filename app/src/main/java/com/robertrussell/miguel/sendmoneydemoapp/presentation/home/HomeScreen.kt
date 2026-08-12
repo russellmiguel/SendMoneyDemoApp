@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import com.robertrussell.miguel.sendmoneydemoapp.presentation.sendmoney.SendMoneyScreen
+import com.robertrussell.miguel.sendmoneydemoapp.presentation.transaction.TransactionPage
 import com.robertrussell.miguel.sendmoneydemoapp.presentation.wallet.WalletPage
 
 @Composable
@@ -92,7 +93,6 @@ fun HomeScreen(
                     onSendMoney = { currentPage = "send_money" }
                 )
                 "transactions" -> TransactionPage(
-                    transactions = viewModel.transactions,
                     onBackPressed = { currentPage = "wallet" }
                 )
                 "send_money" -> SendMoneyScreen(

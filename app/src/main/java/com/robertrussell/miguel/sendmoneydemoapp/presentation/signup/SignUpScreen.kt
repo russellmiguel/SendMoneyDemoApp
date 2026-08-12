@@ -1,6 +1,7 @@
 package com.robertrussell.miguel.sendmoneydemoapp.presentation.signup
 
 import android.widget.Toast
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -51,6 +52,10 @@ fun SignUpScreen(
     val borderGray = Color(0xFFD0D0D0)
     val helpRed = Color(0xFFD32F2F)
 
+    BackHandler(onBack = {
+        onNavigateToLogin()
+    })
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -70,7 +75,9 @@ fun SignUpScreen(
         // Name Field
         OutlinedTextField(
             value = viewModel.name,
-            onValueChange = viewModel::onNameChange,
+            onValueChange = {
+                if (it.length <= 40) viewModel.onNameChange(it)
+            },
             placeholder = { Text("Name", color = Color.LightGray) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
@@ -99,16 +106,29 @@ fun SignUpScreen(
         // Email Field
         OutlinedTextField(
             value = viewModel.email,
-            onValueChange = viewModel::onEmailChange,
+            onValueChange = {
+                if (it.length <= 50) viewModel.onEmailChange(it)
+            },
             placeholder = { Text("Email", color = Color.LightGray) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
             singleLine = true,
+            isError = !viewModel.isEmailValid,
+            supportingText = {
+                if (!viewModel.isEmailValid) {
+                    Text(
+                        text = "Invalid email format",
+                        color = helpRed
+                    )
+                }
+            },
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = borderGray,
                 focusedBorderColor = Color.DarkGray,
                 unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White
+                focusedContainerColor = Color.White,
+                errorBorderColor = helpRed,
+                errorSupportingTextColor = helpRed
             ),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email)
         )
@@ -118,18 +138,31 @@ fun SignUpScreen(
         // Password Field
         OutlinedTextField(
             value = viewModel.password,
-            onValueChange = viewModel::onPasswordChange,
+            onValueChange = {
+                if (it.length <= 20) viewModel.onPasswordChange(it)
+            },
             placeholder = { Text("Password", color = Color.LightGray) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
             singleLine = true,
             visualTransformation = if (viewModel.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+            isError = !viewModel.isPasswordValid,
+            supportingText = {
+                if (!viewModel.isPasswordValid) {
+                    Text(
+                        text = "Password must be at least 8 characters",
+                        color = helpRed
+                    )
+                }
+            },
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = borderGray,
                 focusedBorderColor = Color.DarkGray,
                 unfocusedContainerColor = Color.White,
-                focusedContainerColor = Color.White
+                focusedContainerColor = Color.White,
+                errorBorderColor = helpRed,
+                errorSupportingTextColor = helpRed
             ),
             trailingIcon = {
                 val image =
@@ -147,6 +180,7 @@ fun SignUpScreen(
                 viewModel.signUp(
                     onSuccess = {
                         Toast.makeText(context, "Sign up successful!", Toast.LENGTH_SHORT).show()
+                        viewModel.clearFields()
                         onNavigateToLogin()
                     },
                     onError = { error ->

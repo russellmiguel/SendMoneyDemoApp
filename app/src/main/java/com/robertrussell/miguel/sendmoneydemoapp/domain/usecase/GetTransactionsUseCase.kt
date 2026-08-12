@@ -8,4 +8,8 @@ class GetTransactionsUseCase(private val repository: TransactionRepository) {
     operator fun invoke(email: String): Flow<List<Transaction>> {
         return repository.getTransactions(email)
     }
+
+    suspend fun getRemoteTransactions(): Result<List<Transaction>> {
+        return repository.getRemoteTransactions()
+    }
 }

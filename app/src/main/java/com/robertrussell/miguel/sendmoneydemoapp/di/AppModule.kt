@@ -32,7 +32,7 @@ object AppModule {
     @Provides
     @Singleton
     fun provideOkHttpClient(): OkHttpClient {
-        val hostname = "jsonplaceholder.typicode.com"
+        val hostname = "my-json-server.typicode.com"
         val certificatePinner = CertificatePinner.Builder()
             .add(hostname, BuildConfig.SSL_PIN)
             .add(hostname, BuildConfig.SSL_PIN_BACKUP)
