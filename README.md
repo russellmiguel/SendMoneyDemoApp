@@ -21,6 +21,17 @@ A secure and intuitive Android application for managing a digital wallet and sen
 - **Concurrency**: Kotlin Coroutines & Flow
 - **Testing**: JUnit 4, MockK, Robolectric, Coroutines Test
 
+## Architecture
+This project follows **Clean Architecture** principles to ensure separation of concerns, testability, and maintainability.
+
+- **Presentation Layer**: Jetpack Compose and ViewModels.
+- **Domain Layer**: Business logic via Use Cases and Repository interfaces.
+- **Data Layer**: Room database for local persistence and Retrofit for remote API communication.
+
+For detailed architectural diagrams, see [ARCHITECTURE.md](./ARCHITECTURE.md).
+
+*Note: To view the architecture and send_money_sequence diagrams, Android Studio might need to install PlantUML and OmniViewer plugins.*
+
 ## Setup Instructions
 
 ### 1. SSL Pinning Configuration

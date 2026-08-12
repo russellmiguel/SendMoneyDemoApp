@@ -1,6 +1,5 @@
 package com.robertrussell.miguel.sendmoneydemoapp.data.repository
 
-import android.util.Log
 import com.robertrussell.miguel.sendmoneydemoapp.data.local.TransactionDao
 import com.robertrussell.miguel.sendmoneydemoapp.data.local.TransactionEntity
 import com.robertrussell.miguel.sendmoneydemoapp.data.local.UserDao

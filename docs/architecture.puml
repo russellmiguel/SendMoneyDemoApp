@@ -1,0 +1,95 @@
+@startuml
+skinparam packageStyle rectangle
+skinparam shadowing false
+
+package "Presentation Layer" {
+    class SendMoneyScreen << (C,#ADD1B2) Compose >>
+    class SendMoneyViewModel {
+        - sendMoneyUseCase: SendMoneyUseCase
+        - getBalanceUseCase: GetBalanceUseCase
+        - authRepository: AuthRepository
+        + amountText: String
+        + isProcessing: Boolean
+        + sendMoney(password, recipient, onResult)
+    }
+}
+
+package "Domain Layer" {
+    package "Use Cases" {
+        class SendMoneyUseCase {
+            - repository: TransactionRepository
+            + invoke(email, amount, recipient)
+        }
+        class GetBalanceUseCase {
+            - repository: AuthRepository
+            + invoke(email)
+        }
+    }
+
+    package "Repositories (Interfaces)" {
+        interface TransactionRepository {
+            + getTransactions(email): Flow<List<Transaction>>
+            + sendMoney(email, amount, recipient): Result<Unit>
+            + addBalance(email, amount): Result<Unit>
+        }
+        interface AuthRepository {
+            + login(email, pass): Result<User>
+            + observeBalance(email): Flow<Double>
+            + signUp(name, email, pass): Result<Unit>
+        }
+    }
+
+    package "Models" {
+        class User {
+            + email: String
+            + name: String
+            + balance: Double
+        }
+        class Transaction {
+            + id: Int
+            + amount: Double
+            + recipient: String
+            + type: String
+        }
+    }
+}
+
+package "Data Layer" {
+    package "Repository Impls" {
+        class TransactionRepositoryImpl {
+            - transactionDao: TransactionDao
+            - userDao: UserDao
+            - api: JsonPlaceholderApi
+        }
+        class AuthRepositoryImpl {
+            - userDao: UserDao
+            - passwordHasher: PasswordHasher
+        }
+    }
+
+    package "Local (Room)" {
+        class AppDatabase
+        interface UserDao
+        interface TransactionDao
+        entity UserEntity
+        entity TransactionEntity
+    }
+
+    package "Remote (Retrofit)" {
+        interface JsonPlaceholderApi
+    }
+}
+
+' Relationships
+SendMoneyViewModel --> SendMoneyUseCase
+SendMoneyViewModel --> GetBalanceUseCase
+SendMoneyUseCase --> TransactionRepository
+GetBalanceUseCase --> AuthRepository
+TransactionRepositoryImpl ..|> TransactionRepository
+AuthRepositoryImpl ..|> AuthRepository
+TransactionRepositoryImpl --> TransactionDao
+TransactionRepositoryImpl --> UserDao
+TransactionRepositoryImpl --> JsonPlaceholderApi
+AuthRepositoryImpl --> UserDao
+
+@enduml

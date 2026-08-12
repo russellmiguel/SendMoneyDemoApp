@@ -1,0 +1,51 @@
+@startuml
+actor User
+participant SendMoneyScreen
+participant SendMoneyViewModel
+participant AuthRepository
+participant GetBalanceUseCase
+participant SendMoneyUseCase
+participant TransactionRepository
+participant JsonPlaceholderApi
+database RoomDB
+
+User -> SendMoneyScreen: Enter amount & recipient
+User -> SendMoneyScreen: Tap "Send Money"
+SendMoneyScreen -> User: Prompt for Password
+User -> SendMoneyScreen: Enter Password
+SendMoneyScreen -> SendMoneyViewModel: sendMoney(password, recipient)
+
+group Authentication & Validation
+    SendMoneyViewModel -> AuthRepository: login(email, password)
+    AuthRepository -> RoomDB: Query UserEntity
+    RoomDB --> AuthRepository: UserEntity (hashed pass)
+    AuthRepository -> AuthRepository: Verify Hash
+    AuthRepository --> SendMoneyViewModel: Result<User>
+
+    SendMoneyViewModel -> GetBalanceUseCase: invoke(email)
+    GetBalanceUseCase -> AuthRepository: observeBalance(email)
+    AuthRepository -> RoomDB: Observe Balance
+    RoomDB --> GetBalanceUseCase: Flow<Double>
+    GetBalanceUseCase --> SendMoneyViewModel: Current Balance
+
+    SendMoneyViewModel -> SendMoneyViewModel: Validate Amount <= Balance
+end
+
+group Transaction Execution
+    SendMoneyViewModel -> SendMoneyUseCase: invoke(email, amount, recipient)
+    SendMoneyUseCase -> TransactionRepository: sendMoney(email, amount, recipient)
+
+    TransactionRepository -> JsonPlaceholderApi: POST /posts (Mock API call)
+    JsonPlaceholderApi --> TransactionRepository: 201 Created
+
+    TransactionRepository -> RoomDB: Update Balance (UserDao)
+    TransactionRepository -> RoomDB: Insert Transaction (TransactionDao)
+
+    TransactionRepository --> SendMoneyUseCase: Result.success(Unit)
+    SendMoneyUseCase --> SendMoneyViewModel: Result.success(Unit)
+end
+
+SendMoneyViewModel --> SendMoneyScreen: onResult(Success)
+SendMoneyScreen --> User: Show Success UI & Navigate Back
+
+@enduml
