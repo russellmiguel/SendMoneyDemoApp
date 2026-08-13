@@ -7,7 +7,7 @@ class AppUtilsTest {
 
     @Test
     fun `formatNumber formats with commas`() {
-        assertEquals("1,000", formatNumber(1000))
+        assertEquals("1,000.00", formatNumber(1000))
         assertEquals("1,234,567.89", formatNumber(1234567.89))
     }
 
