@@ -31,6 +31,7 @@ fun SendMoneyScreen(
 ) {
     var showPasswordDialog by remember { mutableStateOf(false) }
     var password by remember { mutableStateOf("") }
+
     var recipient by remember { mutableStateOf("") }
     var transactionResult by remember { mutableStateOf<Result<Unit>?>(null) }
     val sheetState = rememberModalBottomSheetState()
@@ -128,7 +129,7 @@ fun SendMoneyScreen(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             IconButton(onClick = {
@@ -156,7 +157,7 @@ fun SendMoneyScreen(
             placeholder = { Text("Name", color = Color.LightGray) },
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 24.dp, vertical = 16.dp),
+                .padding(horizontal = 16.dp, vertical = 8.dp),
             maxLines = 1,
             shape = RoundedCornerShape(10.dp),
             singleLine = true,
@@ -182,7 +183,7 @@ fun SendMoneyScreen(
         // Amount Display
         Card(
             modifier = Modifier
-                .padding(horizontal = 24.dp)
+                .padding(horizontal = 16.dp)
                 .fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
             colors = CardDefaults.cardColors(containerColor = Color.White),
@@ -190,16 +191,16 @@ fun SendMoneyScreen(
         ) {
             Row(
                 modifier = Modifier
-                    .padding(24.dp)
+                    .padding(16.dp)
                     .fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                Text(text = "₱", fontSize = 24.sp, color = Color.Gray)
+                Text(text = "₱", fontSize = 16.sp, color = Color.Gray)
                 val amount = viewModel.amountText.take(10)
                 Text(
                     text = if (viewModel.amountText.isEmpty()) "0" else formatNumber(amount.toDouble()),
-                    fontSize = 36.sp,
+                    fontSize = 24.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color.Black,
                     maxLines = 1
@@ -260,7 +261,7 @@ fun NumericKeypad(
                     Box(
                         modifier = Modifier
                             .weight(1f)
-                            .height(72.dp)
+                            .height(56.dp)
                             .clickable {
                                 if (key == "BACK") onBackspace() else onNumberClick(key)
                             }

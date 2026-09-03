@@ -26,6 +26,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -38,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.robertrussell.miguel.sendmoneydemoapp.domain.model.User
 import com.robertrussell.miguel.sendmoneydemoapp.ui.theme.SendMoneyDemoAppTheme
 
@@ -49,12 +52,31 @@ fun LoginScreen(
     viewModel: LoginViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val state by viewModel.loginUiState.collectAsStateWithLifecycle()
+
     val lightGray = Color(0xFFE8E8E8)
     val borderGray = Color(0xFFD0D0D0)
     val helpRed = Color(0xFFD32F2F)
 
     BackHandler {
         (context as? Activity)?.finish()
+    }
+
+    LaunchedEffect(state.loginStatus) {
+        when (val status = state.loginStatus) {
+            is LoginStatus.Success -> {
+                Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
+                onNavigateToHome(status.user)
+                viewModel.resetStatus()
+            }
+
+            is LoginStatus.Error -> {
+                Toast.makeText(context, status.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetStatus()
+            }
+
+            else -> Unit
+        }
     }
 
     Column(
@@ -75,8 +97,10 @@ fun LoginScreen(
 
         // Email Field
         OutlinedTextField(
-            value = viewModel.email,
-            onValueChange = viewModel::onEmailChange,
+            value = state.email,
+            onValueChange = {
+                viewModel.onEvent(LoginEvent.EmailChanged(it))
+            },
             placeholder = { Text("Email", color = Color.LightGray) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
@@ -94,13 +118,15 @@ fun LoginScreen(
 
         // Password Field
         OutlinedTextField(
-            value = viewModel.password,
-            onValueChange = viewModel::onPasswordChange,
+            value = state.password,
+            onValueChange = {
+                viewModel.onEvent(LoginEvent.PasswordChanged(it))
+            },
             placeholder = { Text("Password", color = Color.LightGray) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
             singleLine = true,
-            visualTransformation = if (viewModel.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
             colors = OutlinedTextFieldDefaults.colors(
                 unfocusedBorderColor = borderGray,
@@ -110,8 +136,10 @@ fun LoginScreen(
             ),
             trailingIcon = {
                 val image =
-                    if (viewModel.passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                IconButton(onClick = viewModel::togglePasswordVisibility) {
+                    if (state.isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                IconButton(onClick = {
+                    viewModel.onEvent(LoginEvent.PasswordVisibleChanged(!state.isPasswordVisible))
+                }) {
                     Icon(image, contentDescription = null, tint = Color.LightGray)
                 }
             }
@@ -121,16 +149,9 @@ fun LoginScreen(
 
         Button(
             onClick = {
-                viewModel.login(
-                    onSuccess = { user ->
-                        Toast.makeText(context, "Login successful!", Toast.LENGTH_SHORT).show()
-                        onNavigateToHome(user)
-                    },
-                    onError = { error ->
-                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                    }
-                )
+                viewModel.onEvent(LoginEvent.OnLogin)
             },
+            enabled = state.loginStatus !is LoginStatus.Loading,
             modifier = Modifier
                 .fillMaxWidth()
                 .height(64.dp),

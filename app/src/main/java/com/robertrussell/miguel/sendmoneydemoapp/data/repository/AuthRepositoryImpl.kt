@@ -5,8 +5,10 @@ import com.robertrussell.miguel.sendmoneydemoapp.data.local.UserEntity
 import com.robertrussell.miguel.sendmoneydemoapp.domain.model.User
 import com.robertrussell.miguel.sendmoneydemoapp.domain.repository.AuthRepository
 import com.robertrussell.miguel.sendmoneydemoapp.domain.security.PasswordHasher
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.withContext
 import javax.inject.Inject
 
 class AuthRepositoryImpl @Inject constructor(
@@ -31,19 +33,21 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun login(email: String, pass: String): Result<User> {
-        return try {
-            val user = userDao.getUserByEmail(email)
-            if (user != null) {
-                if (passwordHasher.verify(pass, user.passwordHash)) {
-                    Result.success(User(email = user.email, name = user.name))
+        return withContext(Dispatchers.Default) {
+            try {
+                val user = userDao.getUserByEmail(email)
+                if (user != null) {
+                    if (passwordHasher.verify(pass, user.passwordHash)) {
+                        Result.success(User(email = user.email, name = user.name))
+                    } else {
+                        Result.failure(Exception("Invalid credentials"))
+                    }
                 } else {
-                    Result.failure(Exception("Invalid credentials"))
+                    Result.failure(Exception("User not found"))
                 }
-            } else {
-                Result.failure(Exception("User not found"))
+            } catch (e: Exception) {
+                Result.failure(e)
             }
-        } catch (e: Exception) {
-            Result.failure(e)
         }
     }
 

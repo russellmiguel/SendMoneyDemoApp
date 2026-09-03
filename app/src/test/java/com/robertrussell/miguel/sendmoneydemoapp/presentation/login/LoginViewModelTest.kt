@@ -21,51 +21,47 @@ class LoginViewModelTest {
     private val viewModel = LoginViewModel(loginUseCase)
 
     @Test
-    fun `onEmailChange updates email state`() {
-        viewModel.onEmailChange("test@example.com")
-        assertEquals("test@example.com", viewModel.email)
+    fun `EmailChanged event updates email state`() {
+        viewModel.onEvent(LoginEvent.EmailChanged("test@example.com"))
+        assertEquals("test@example.com", viewModel.loginUiState.value.email)
     }
 
     @Test
-    fun `onPasswordChange updates password state`() {
-        viewModel.onPasswordChange("password123")
-        assertEquals("password123", viewModel.password)
+    fun `PasswordChanged event updates password state`() {
+        viewModel.onEvent(LoginEvent.PasswordChanged("password123"))
+        assertEquals("password123", viewModel.loginUiState.value.password)
     }
 
     @Test
-    fun `togglePasswordVisibility toggles state`() {
-        val initial = viewModel.passwordVisible
-        viewModel.togglePasswordVisibility()
-        assertNotEquals(initial, viewModel.passwordVisible)
-        viewModel.togglePasswordVisibility()
-        assertEquals(initial, viewModel.passwordVisible)
+    fun `PasswordVisibleChanged event toggles state`() {
+        val initial = viewModel.loginUiState.value.isPasswordVisible
+        viewModel.onEvent(LoginEvent.PasswordVisibleChanged(!initial))
+        assertNotEquals(initial, viewModel.loginUiState.value.isPasswordVisible)
+        
+        val updated = viewModel.loginUiState.value.isPasswordVisible
+        viewModel.onEvent(LoginEvent.PasswordVisibleChanged(!updated))
+        assertEquals(initial, viewModel.loginUiState.value.isPasswordVisible)
     }
 
     @Test
-    fun `login success calls onSuccess`() = runTest {
+    fun `OnLogin event with success updates loginStatus to Success`() = runTest {
         val user = User("test@example.com", "Name")
         coEvery { loginUseCase(any(), any()) } returns Result.success(user)
 
-        var successUser: User? = null
-        viewModel.login(
-            onSuccess = { successUser = it },
-            onError = {}
-        )
+        viewModel.onEvent(LoginEvent.OnLogin)
 
-        assertEquals(user, successUser)
+        assertTrue(viewModel.loginUiState.value.loginStatus is LoginStatus.Success)
+        assertEquals(user, (viewModel.loginUiState.value.loginStatus as LoginStatus.Success).user)
     }
 
     @Test
-    fun `login failure calls onError`() = runTest {
+    fun `OnLogin event with failure updates loginStatus to Error`() = runTest {
         val errorMessage = "Invalid credentials"
         coEvery { loginUseCase(any(), any()) } returns Result.failure(Exception(errorMessage))
 
-        var error: String? = null
-        viewModel.login(
-            onSuccess = {},
-            onError = { error = it }
-        )
+        viewModel.onEvent(LoginEvent.OnLogin)
 
-        assertEquals(errorMessage, error)
+        assertTrue(viewModel.loginUiState.value.loginStatus is LoginStatus.Error)
+        assertEquals(errorMessage, (viewModel.loginUiState.value.loginStatus as LoginStatus.Error).message)
     }
 }

@@ -1,13 +1,13 @@
 package com.robertrussell.miguel.sendmoneydemoapp.presentation.login
 
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.robertrussell.miguel.sendmoneydemoapp.domain.model.User
 import com.robertrussell.miguel.sendmoneydemoapp.domain.usecase.LoginUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -15,33 +15,53 @@ import javax.inject.Inject
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase
 ) : ViewModel() {
-    var email by mutableStateOf("")
-        private set
-    var password by mutableStateOf("")
-        private set
-    var passwordVisible by mutableStateOf(false)
-        private set
 
-    fun onEmailChange(newEmail: String) {
-        email = newEmail
-    }
+    private val _loginUiState = MutableStateFlow(LoginUiState())
+    val loginUiState: StateFlow<LoginUiState> = _loginUiState.asStateFlow()
 
-    fun onPasswordChange(newPassword: String) {
-        password = newPassword
-    }
+    fun onEvent(event: LoginEvent) {
+        when (event) {
+            is LoginEvent.EmailChanged -> {
+                _loginUiState.update { it.copy(email = event.email) }
+            }
 
-    fun togglePasswordVisibility() {
-        passwordVisible = !passwordVisible
-    }
+            is LoginEvent.PasswordChanged -> {
+                _loginUiState.update { it.copy(password = event.password) }
+            }
 
-    fun login(onSuccess: (User) -> Unit, onError: (String) -> Unit) {
-        viewModelScope.launch {
-            val result = loginUseCase(email, password)
-            if (result.isSuccess) {
-                onSuccess(result.getOrThrow())
-            } else {
-                onError(result.exceptionOrNull()?.message ?: "Login failed")
+            is LoginEvent.PasswordVisibleChanged -> {
+                _loginUiState.update { it.copy(isPasswordVisible = event.passwordVisible) }
+            }
+
+            LoginEvent.OnLogin -> {
+                val currentState = _loginUiState.value
+
+                login(
+                    password = currentState.password,
+                    email = currentState.email
+                )
             }
         }
+    }
+
+    private fun login(email: String, password: String) {
+        viewModelScope.launch {
+            _loginUiState.update { it.copy(loginStatus = LoginStatus.Loading) }
+
+            val result = loginUseCase(email, password)
+
+            _loginUiState.update { state ->
+                state.copy(
+                    loginStatus = result.fold(
+                        onSuccess = { LoginStatus.Success(it) },
+                        onFailure = { LoginStatus.Error(it.message ?: "Login failed!") }
+                    )
+                )
+            }
+        }
+    }
+
+    fun resetStatus() {
+        _loginUiState.update { it.copy(loginStatus = LoginStatus.Idle) }
     }
 }
