@@ -27,6 +27,8 @@ import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -39,6 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.robertrussell.miguel.sendmoneydemoapp.ui.theme.SendMoneyDemoAppTheme
 
 @Composable
@@ -48,6 +51,8 @@ fun SignUpScreen(
     viewModel: SignUpViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
+    val state by viewModel.uiState.collectAsStateWithLifecycle()
+
     val lightGray = Color(0xFFE8E8E8)
     val borderGray = Color(0xFFD0D0D0)
     val helpRed = Color(0xFFD32F2F)
@@ -55,6 +60,23 @@ fun SignUpScreen(
     BackHandler(onBack = {
         onNavigateToLogin()
     })
+
+    LaunchedEffect(state.status) {
+        when (val status = state.status) {
+            is SignUpStatus.Success -> {
+                Toast.makeText(context, "Sign up successful!", Toast.LENGTH_SHORT).show()
+                viewModel.resetStatus()
+                onNavigateToLogin()
+            }
+
+            is SignUpStatus.Error -> {
+                Toast.makeText(context, status.message, Toast.LENGTH_SHORT).show()
+                viewModel.resetStatus()
+            }
+
+            else -> Unit
+        }
+    }
 
     Column(
         modifier = modifier
@@ -74,9 +96,9 @@ fun SignUpScreen(
 
         // Name Field
         OutlinedTextField(
-            value = viewModel.name,
+            value = state.name,
             onValueChange = {
-                if (it.length <= 40) viewModel.onNameChange(it)
+                if (it.length <= 40) viewModel.onEvent(SignUpEvent.NameChanged(it))
             },
             placeholder = { Text("Name", color = Color.LightGray) },
             modifier = Modifier.fillMaxWidth(),
@@ -89,8 +111,8 @@ fun SignUpScreen(
                 focusedContainerColor = Color.White
             ),
             trailingIcon = {
-                if (viewModel.name.isNotEmpty()) {
-                    IconButton(onClick = { viewModel.onNameChange("") }) {
+                if (state.name.isNotEmpty()) {
+                    IconButton(onClick = { viewModel.onEvent(SignUpEvent.NameChanged("")) }) {
                         Icon(
                             Icons.Default.Clear,
                             contentDescription = "Clear",
@@ -105,17 +127,17 @@ fun SignUpScreen(
 
         // Email Field
         OutlinedTextField(
-            value = viewModel.email,
+            value = state.email,
             onValueChange = {
-                if (it.length <= 50) viewModel.onEmailChange(it)
+                if (it.length <= 50) viewModel.onEvent(SignUpEvent.EmailChanged(it))
             },
             placeholder = { Text("Email", color = Color.LightGray) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
             singleLine = true,
-            isError = !viewModel.isEmailValid,
+            isError = !state.isEmailValid,
             supportingText = {
-                if (!viewModel.isEmailValid) {
+                if (!state.isEmailValid) {
                     Text(
                         text = "Invalid email format",
                         color = helpRed
@@ -137,19 +159,19 @@ fun SignUpScreen(
 
         // Password Field
         OutlinedTextField(
-            value = viewModel.password,
+            value = state.password,
             onValueChange = {
-                if (it.length <= 20) viewModel.onPasswordChange(it)
+                if (it.length <= 20) viewModel.onEvent(SignUpEvent.PasswordChanged(it))
             },
             placeholder = { Text("Password", color = Color.LightGray) },
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(10.dp),
             singleLine = true,
-            visualTransformation = if (viewModel.passwordVisible) VisualTransformation.None else PasswordVisualTransformation(),
+            visualTransformation = if (state.isPasswordVisible) VisualTransformation.None else PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
-            isError = !viewModel.isPasswordValid,
+            isError = !state.isPasswordValid,
             supportingText = {
-                if (!viewModel.isPasswordValid) {
+                if (!state.isPasswordValid) {
                     Text(
                         text = "Password must be at least 8 characters",
                         color = helpRed
@@ -166,8 +188,10 @@ fun SignUpScreen(
             ),
             trailingIcon = {
                 val image =
-                    if (viewModel.passwordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
-                IconButton(onClick = viewModel::togglePasswordVisibility) {
+                    if (state.isPasswordVisible) Icons.Default.Visibility else Icons.Default.VisibilityOff
+                IconButton(onClick = {
+                    viewModel.onEvent(SignUpEvent.TogglePasswordVisibility(!state.isPasswordVisible))
+                }) {
                     Icon(image, contentDescription = null, tint = Color.LightGray)
                 }
             }
@@ -177,16 +201,7 @@ fun SignUpScreen(
 
         Button(
             onClick = {
-                viewModel.signUp(
-                    onSuccess = {
-                        Toast.makeText(context, "Sign up successful!", Toast.LENGTH_SHORT).show()
-                        viewModel.clearFields()
-                        onNavigateToLogin()
-                    },
-                    onError = { error ->
-                        Toast.makeText(context, error, Toast.LENGTH_SHORT).show()
-                    }
-                )
+                viewModel.signUp()
             },
             modifier = Modifier
                 .fillMaxWidth()
