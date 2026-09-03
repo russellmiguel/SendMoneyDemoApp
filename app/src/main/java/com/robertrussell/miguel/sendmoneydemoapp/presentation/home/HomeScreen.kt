@@ -12,10 +12,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,30 +28,28 @@ fun HomeScreen(
     onLogout: () -> Unit,
     viewModel: HomeViewModel = hiltViewModel()
 ) {
-    var currentPage by remember { mutableStateOf("wallet") }
-    var showLogoutDialog by remember { mutableStateOf(false) }
 
-    if (currentPage == "wallet") {
+    if (viewModel.currentPage == "wallet") {
         BackHandler {
-            showLogoutDialog = true
+            viewModel.onShowLogoutDialog(true)
         }
     }
 
-    if (showLogoutDialog) {
+    if (viewModel.showLogoutDialog) {
         AlertDialog(
-            onDismissRequest = { showLogoutDialog = false },
+            onDismissRequest = { viewModel.onShowLogoutDialog(false) },
             title = { Text(text = "Logout") },
             text = { Text(text = "Are you sure you want to logout?") },
             confirmButton = {
                 TextButton(onClick = {
-                    showLogoutDialog = false
+                    viewModel.onShowLogoutDialog(false)
                     onLogout()
                 }) {
                     Text(text = "Yes", color = Color.Red)
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showLogoutDialog = false }) {
+                TextButton(onClick = { viewModel.onShowLogoutDialog(false) }) {
                     Text(text = "No")
                 }
             }
@@ -64,7 +58,6 @@ fun HomeScreen(
 
     Scaffold(
         topBar = {
-            if (currentPage != "send_money") {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -79,24 +72,23 @@ fun HomeScreen(
                         fontWeight = FontWeight.Bold
                     )
 
-                    TextButton(onClick = { showLogoutDialog = true }) {
+                    TextButton(onClick = { viewModel.onShowLogoutDialog(true) }) {
                         Text(text = "Logout", color = Color.Red, fontSize = 16.sp)
                     }
                 }
-            }
         }
     ) { innerPadding ->
         Box(modifier = Modifier.padding(innerPadding)) {
-            when (currentPage) {
+            when (viewModel.currentPage) {
                 "wallet" -> WalletPage(
-                    onViewTransactions = { currentPage = "transactions" },
-                    onSendMoney = { currentPage = "send_money" }
+                    onViewTransactions = { viewModel.onCurrentPageChange("transactions") },
+                    onSendMoney = { viewModel.onCurrentPageChange("send_money") }
                 )
                 "transactions" -> TransactionPage(
-                    onBackPressed = { currentPage = "wallet" }
+                    onBackPressed = { viewModel.onCurrentPageChange("wallet") }
                 )
                 "send_money" -> SendMoneyScreen(
-                    onBackPressed = { currentPage = "wallet" }
+                    onBackPressed = { viewModel.onCurrentPageChange("wallet") }
                 )
             }
         }
