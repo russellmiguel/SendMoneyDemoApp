@@ -24,74 +24,68 @@ class SignUpViewModelTest {
 
     @Test
     fun `onNameChange updates name`() {
-        viewModel.onNameChange("John Doe")
-        assertEquals("John Doe", viewModel.name)
+        viewModel.onEvent(SignUpEvent.NameChanged("John Doe"))
+        assertEquals("John Doe", viewModel.uiState.value.name)
     }
 
     @Test
     fun `onEmailChange with valid email sets isEmailValid true`() {
-        viewModel.onEmailChange("test@example.com")
-        assertTrue(viewModel.isEmailValid)
+        viewModel.onEvent(SignUpEvent.EmailChanged("test@example.com"))
+        assertTrue(viewModel.uiState.value.isEmailValid)
     }
 
     @Test
     fun `onEmailChange with invalid email sets isEmailValid false`() {
-        viewModel.onEmailChange("invalid-email")
-        assertFalse(viewModel.isEmailValid)
+        viewModel.onEvent(SignUpEvent.EmailChanged("invalid-email"))
+        assertFalse(viewModel.uiState.value.isEmailValid)
     }
 
     @Test
     fun `onPasswordChange with short password sets isPasswordValid false`() {
-        viewModel.onPasswordChange("123")
-        assertFalse(viewModel.isPasswordValid)
+        viewModel.onEvent(SignUpEvent.PasswordChanged("123"))
+        assertFalse(viewModel.uiState.value.isPasswordValid)
     }
 
     @Test
     fun `onPasswordChange with long password sets isPasswordValid true`() {
-        viewModel.onPasswordChange("12345678")
-        assertTrue(viewModel.isPasswordValid)
+        viewModel.onEvent(SignUpEvent.PasswordChanged("12345678"))
+        assertTrue(viewModel.uiState.value.isPasswordValid)
     }
 
     @Test
-    fun `signUp success calls onSuccess`() = runTest {
-        viewModel.onNameChange("John")
-        viewModel.onEmailChange("john@example.com")
-        viewModel.onPasswordChange("password123")
+    fun `signUp success sets status to Success`() = runTest {
+        viewModel.onEvent(SignUpEvent.NameChanged("John"))
+        viewModel.onEvent(SignUpEvent.EmailChanged("john@example.com"))
+        viewModel.onEvent(SignUpEvent.PasswordChanged("password123"))
         
         coEvery { signUpUseCase(any(), any(), any()) } returns Result.success(Unit)
 
-        var successCalled = false
-        viewModel.signUp(
-            onSuccess = { successCalled = true },
-            onError = {}
-        )
+        viewModel.onEvent(SignUpEvent.OnSignUp)
 
-        assertTrue(successCalled)
+        assertEquals(SignUpStatus.Success, viewModel.uiState.value.status)
     }
 
     @Test
-    fun `signUp failure calls onError`() = runTest {
-        viewModel.onNameChange("John")
-        viewModel.onEmailChange("john@example.com")
-        viewModel.onPasswordChange("password123")
+    fun `signUp failure sets status to Error`() = runTest {
+        viewModel.onEvent(SignUpEvent.NameChanged("John"))
+        viewModel.onEvent(SignUpEvent.EmailChanged("john@example.com"))
+        viewModel.onEvent(SignUpEvent.PasswordChanged("password123"))
         
         val errorMsg = "Email already exists"
         coEvery { signUpUseCase(any(), any(), any()) } returns Result.failure(Exception(errorMsg))
 
-        var error: String? = null
-        viewModel.signUp(
-            onSuccess = {},
-            onError = { error = it }
-        )
+        viewModel.onEvent(SignUpEvent.OnSignUp)
 
-        assertEquals(errorMsg, error)
+        val status = viewModel.uiState.value.status
+        assertTrue(status is SignUpStatus.Error)
+        assertEquals(errorMsg, (status as SignUpStatus.Error).message)
     }
 
     @Test
     fun `clearFields resets state`() {
-        viewModel.onNameChange("John")
-        viewModel.clearFields()
-        assertEquals("", viewModel.name)
-        assertTrue(viewModel.isEmailValid)
+        viewModel.onEvent(SignUpEvent.NameChanged("John"))
+        viewModel.onEvent(SignUpEvent.ClearFields)
+        assertEquals("", viewModel.uiState.value.name)
+        assertTrue(viewModel.uiState.value.isEmailValid)
     }
 }
